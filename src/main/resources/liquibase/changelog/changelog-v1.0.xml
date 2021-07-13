@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet id="0000000000" author="masoud">
+
+        <createSequence sequenceName="user_sequence" incrementBy="50" startValue="1"/>
+        <createSequence sequenceName="product_sequence" incrementBy="50" startValue="1"/>
+
+    </changeSet>
+
+    <changeSet id="0000000001" author="masoud">
+
+        <createTable tableName="app_user">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="username" type="varchar(50)">
+                <constraints unique="true" nullable="false" uniqueConstraintName="ux_user_username"/>
+            </column>
+            <column name="password_hash" type="varchar(60)"/>
+            <column name="first_name" type="varchar(50)"/>
+            <column name="last_name" type="varchar(50)"/>
+            <column name="email" type="varchar(250)">
+                <constraints nullable="true" unique="true" uniqueConstraintName="ux_user_email"/>
+            </column>
+            <column name="is_activated" type="boolean" valueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="avatar_url" type="varchar(256)"/>
+            <column name="activation_token" type="varchar(20)"/>
+            <column name="created_date" type="timestamp"/>
+            <column name="created_by" type="varchar(50)"/>
+            <column name="last_modified_date" type="timestamp"/>
+            <column name="last_modified_by" type="varchar(50)"/>
+        </createTable>
+
+        <createTable tableName="authority">
+            <column name="name" type="varchar(50)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="user_authority">
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="authority_name" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="user_authority" columnNames="user_id, authority_name"/>
+
+        <addForeignKeyConstraint baseTableName="user_authority"
+                                 baseColumnNames="authority_name"
+                                 constraintName="fk_authority_name"
+                                 referencedTableName="authority"
+                                 referencedColumnNames="name"/>
+
+        <addForeignKeyConstraint baseTableName="user_authority"
+                                 baseColumnNames="user_id"
+                                 constraintName="fk_user_id"
+                                 referencedTableName="app_user"
+                                 referencedColumnNames="id"/>
+
+        <addNotNullConstraint columnName="password_hash"
+                              columnDataType="varchar(60)"
+                              tableName="app_user"/>
+
+        <loadData
+                file="/liquibase/data/user.csv"
+                tableName="app_user">
+            <column name="id" type="numeric"/>
+            <column name="is_activated" type="boolean"/>
+            <column name="created_date" type="timestamp"/>
+        </loadData>
+
+        <dropDefaultValue tableName="app_user" columnName="created_date" columnDataType="${datetimeType}"/>
+
+        <loadData
+                file="/liquibase/data/authority.csv"
+                tableName="authority">
+            <column name="name" type="string"/>
+        </loadData>
+
+        <loadData
+                file="/liquibase/data/user_authority.csv"
+                tableName="user_authority">
+            <column name="user_id" type="numeric"/>
+        </loadData>
+
+    </changeSet>
+
+    <changeSet id="0000000002" author="masoud">
+
+        <createTable tableName="product">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="title" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price" type="number">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rate" type="number"/>
+            <column name="count" type="int">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="category">
+            <column name="title" type="varchar(100)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="description" type="text">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="product_category">
+            <column name="product_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category_title" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="product_category" columnNames="product_id, category_title"/>
+
+        <addForeignKeyConstraint baseColumnNames="category_title"
+                                 baseTableName="product_category"
+                                 constraintName="fk_category_title"
+                                 referencedColumnNames="title"
+                                 referencedTableName="category"/>
+
+        <addForeignKeyConstraint baseColumnNames="product_id"
+                                 baseTableName="product_category"
+                                 constraintName="fk_product_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="product"/>
+
+        <createTable tableName="comment">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="description" type="text">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <loadData file="/liquibase/data/product.csv" tableName="product">
+            <column name="id" type="numeric"/>
+        </loadData>
+
+        <loadData file="/liquibase/data/category.csv" tableName="category">
+            <column name="id" type="numeric"/>
+        </loadData>
+
+    </changeSet>
+</databaseChangeLog>
